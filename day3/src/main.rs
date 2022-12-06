@@ -54,7 +54,7 @@ fn main() {
         priorities.insert(c, i);
     }
     
-    let mut sum_priorities: u32 = rucksacks.into_iter()
+    let sum_priorities: u32 = rucksacks.iter()
         // task1: split string into two halves
         .map(|rucksack| get_compartments(rucksack)) // split each rucksack into compartments
         // task2: find matching letters in each compartment
@@ -65,6 +65,45 @@ fn main() {
         .sum();
 
     println!("SUM: {:?}", sum_priorities);
+
+    /* PART 2 */
+    let mut groups: Vec<char> = vec!();
+    for subvec in rucksacks.chunks(3) {
+        let a = subvec[0];
+        let b = subvec[1];
+        let c = subvec[2];
+
+        let mut set: HashSet<char> = HashSet::new();
+        for x in a.chars() {
+            if b.contains(x) {
+                if c.contains(x) {
+                    //groups.push(x);
+                    set.insert(x);
+                }
+            }
+        }
+
+        groups.append(&mut Vec::from_iter(set));
+    }
+    
+    
+    let sum_groups: u32 = groups.iter()
+    .map(|priority_char| priorities.get(&priority_char).copied().unwrap_or(0)) // get priorites for each character
+    .sum();
+
+    println!("sum_groups = {:?}", sum_groups);
+
+    /* === PRETTIFY === */
+    // task1: group rucksacks by 3
+    let group_sum: u32 = rucksacks.chunks(3)
+        // task2: find common char in all 3 rucksacks, chunk == vec![a, b, c]
+        .map(|a| get_group_type(a[0], a[1], a[2]))
+        .flatten()
+        .map(|priority_char| priorities.get(&priority_char).copied().unwrap_or(0)) // get priorites for each character
+        .sum()
+    ;
+
+    println!("group_sum = {:?}", group_sum);
 }
 
 /* Split each rucksack into compartments */
@@ -72,9 +111,17 @@ fn get_compartments(input: &str) -> (&str, &str) {
     input.split_at(input.chars().count() / 2)
 }
 
-/* Match two strings and find matching string (case sensitive!) */
+/* Match two strings and find matching char (case sensitive!) */
 fn get_matching_items((comp1, comp2): (&str, &str)) -> HashSet<char> {
     comp1.chars()
         .filter(|c1| comp2.contains(*c1))
         .collect()
 }
+
+/* Match three strings and find matching char (case sensitive!) */
+fn get_group_type(str1: &str, str2: &str, str3: &str) -> HashSet<char> {
+    str1.chars()
+        .filter(|c1| str2.contains(*c1) & str3.contains(*c1))
+        .collect()
+}
+
